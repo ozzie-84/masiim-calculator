@@ -1248,6 +1248,7 @@ function updateFundDrawNote() {
   const gross      = Math.round(fundDraw / (1 - Math.max(taxRate, 0.001)));
   const taxAmt     = gross - fundDraw;
   const hint = document.getElementById('fundDrawHint');
+  const el   = document.getElementById('fundDrawNote');
   if(hint) {
     hint.textContent = (!taxEnabled || taxRate===0)
       ? 'זהו סכום נטו שמגיע לפרעון · ללא ניכוי מס'
