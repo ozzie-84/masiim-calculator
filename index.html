@@ -604,7 +604,7 @@ input[type=range] { width: 100%; accent-color: #1D9E75; height: 6px; cursor: poi
     </div>
     <input type="range" id="fundDraw" min="200" max="3000" step="100" value="1000" oninput="document.getElementById('fundDrawVal').textContent=(+this.value).toLocaleString('he-IL')+' ₪';updateFundDrawNote();calc()">
     <div id="fundDrawNote" style="font-size:12px;color:#BA7517;margin-top:5px;background:#fff8ec;border-radius:6px;padding:5px 10px;display:inline-block;"></div>
-    <div class="slider-hint">זהו סכום נטו שמגיע לפרעון · הקופה תמשוך יותר בגלל מס</div>
+    <div class="slider-hint" id="fundDrawHint">זהו סכום נטו שמגיע לפרעון · הקופה תמשוך יותר בגלל מס</div>
   </div>
 </div>
 
@@ -1098,9 +1098,21 @@ function runCompare() {
       const cBoostPay = (cBoostAmt>0 && m>=7 && m<=7+cBoostPmts-1) ? cBoostMp : 0;
 
       // משיכות בחתונות – עם מס (כמו המחשבון הראשי)
-      const cTaxRate = (document.getElementById('cmpTaxEnabled')?.checked !== false)
+      const cTaxEnabled = document.getElementById('cmpTaxEnabled')?.checked !== false;
+      const cTaxRate = cTaxEnabled
         ? (+(document.getElementById('cmp-tax-rate')?.value||16))/100
         : 0;
+      // עדכן הסבר שורת משיכה
+      const investNote = document.getElementById('cmp-invest-note');
+      if(investNote) {
+        if(cTaxEnabled && cTaxRate>0) {
+          investNote.textContent = 'משיכה נטו בכל חתונה (הקופה תמשוך יותר בגלל מס):';
+          investNote.style.color = '#888';
+        } else {
+          investNote.textContent = '💡 משיכה נטו בכל חתונה (ללא ניכוי מס – מצב פטור ממס):';
+          investNote.style.color = '#1D9E75';
+        }
+      }
       ch.forEach(c=>{
         const lm=(c.year-sYear)*12;
         if(m===lm){
@@ -1108,7 +1120,7 @@ function runCompare() {
           // כדי לקבל withdrawNet נטו צריך למשוך ברוטו
           const withdrawGross = withdrawNet / (1 - cTaxRate);
           if(cBalance < withdrawGross){
-            cWarnings.push('⚠️ אין מספיק כסף בחתונת '+c.name+' ('+c.year+') – חסר '+fmt(withdrawGross-Math.max(0,cBalance))+' ₪ (כולל מס '+Math.round(cTaxRate*100)+'%)');
+            cWarnings.push('⚠️ אין מספיק כסף בחתונת '+c.name+' ('+c.year+') – חסר '+fmt(withdrawGross-Math.max(0,cBalance))+' ₪'+(cTaxEnabled&&cTaxRate>0?' (כולל מס '+Math.round(cTaxRate*100)+'%)':''));
           }
           cBalance -= withdrawGross; // מאפשר מינוס!
         }
@@ -1230,12 +1242,28 @@ function runCompare() {
 }
 
 function updateFundDrawNote() {
-  const fundDraw = +(document.getElementById('fundDraw')||{}).value||1000;
-  const taxRate  = (document.getElementById('taxEnabled')?.checked!==false) ? (+(document.getElementById('taxRate')||{}).value||16)/100 : 0;
-  const gross    = Math.round(fundDraw / (1 - taxRate));
-  const taxAmt   = gross - fundDraw;
-  const el = document.getElementById('fundDrawNote');
-  if(el) el.textContent = `💡 נטו: ${fundDraw.toLocaleString('he-IL')} ₪ · ברוטו בפועל: ~${gross.toLocaleString('he-IL')} ₪ (כולל ~${taxAmt.toLocaleString('he-IL')} ₪ מס)`;
+  const fundDraw   = +(document.getElementById('fundDraw')||{}).value||1000;
+  const taxEnabled = document.getElementById('taxEnabled')?.checked !== false;
+  const taxRate    = taxEnabled ? (+(document.getElementById('taxRate')||{}).value||16)/100 : 0;
+  const gross      = Math.round(fundDraw / (1 - Math.max(taxRate, 0.001)));
+  const taxAmt     = gross - fundDraw;
+  const hint = document.getElementById('fundDrawHint');
+  if(hint) {
+    hint.textContent = (!taxEnabled || taxRate===0)
+      ? 'זהו סכום נטו שמגיע לפרעון · ללא ניכוי מס'
+      : 'זהו סכום נטו שמגיע לפרעון · הקופה תמשוך יותר בגלל מס';
+  }
+  if(el) {
+    if(!taxEnabled || taxRate===0) {
+      el.textContent = `💡 משיכה נטו: ${fundDraw.toLocaleString('he-IL')} ₪ · ללא ניכוי מס (החישוב בוצע במצב פטור ממס)`;
+      el.style.color = '#1D9E75';
+      el.style.background = '#f0faf6';
+    } else {
+      el.textContent = `💡 נטו: ${fundDraw.toLocaleString('he-IL')} ₪ · ברוטו בפועל: ~${gross.toLocaleString('he-IL')} ₪ (כולל ~${taxAmt.toLocaleString('he-IL')} ₪ מס)`;
+      el.style.color = '#BA7517';
+      el.style.background = '#fff8ec';
+    }
+  }
 }
 
 function toggleTax() {
@@ -1413,7 +1441,7 @@ function clearStorage() {
       <div class="field"><label>פרעון חודשי</label><input type="text" id="cmp-boost-display" readonly><div class="unit">₪/חודש · שפיצר</div></div>
     </div>
   </details>
-  <p style="font-size:12px;color:#888;margin-bottom:8px;">משיכה נטו בכל חתונה (הקופה תמשוך יותר בגלל מס):</p>
+  <p style="font-size:12px;color:#888;margin-bottom:8px;" id="cmp-invest-note">משיכה נטו בכל חתונה (הקופה תמשוך יותר בגלל מס):</p>
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:6px;padding:0 12px;">
     <span style="font-size:11px;font-weight:600;color:#888;">ילד / שנה</span>
     <span style="font-size:11px;font-weight:600;color:#888;">סכום משיכה (₪)</span>
