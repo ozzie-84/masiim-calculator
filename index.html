@@ -97,7 +97,8 @@ body { font-family: 'Heebo', -apple-system, sans-serif; background: #f0f2f5; col
 .calc-logo { width: 40px; height: 40px; background: linear-gradient(135deg, #e6b84a, #f0d080); border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 20px; flex-shrink: 0; }
 .calc-header h1 { font-size: 18px; font-weight: 700; }
 .calc-header p { font-size: 12px; color: #aab4cc; }
-.calc-header-actions { margin-right: auto; display: flex; gap: 10px; }
+.calc-header-actions { margin-right: auto; display: flex; gap: 10px; align-items: center; }
+.top-btns { display: flex; gap: 10px; align-items: center; }
 .btn-compare { background: linear-gradient(135deg,#e6b84a,#f0d080); color: #1a1a2e; border: none; padding: 7px 16px; border-radius: 8px; font-size: 13px; cursor: pointer; font-family: inherit; font-weight: 600; }
 .btn-compare:hover { opacity: 0.9; }
 .btn-print { background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.25); color: #fff; padding: 7px 16px; border-radius: 8px; font-size: 13px; cursor: pointer; font-family: inherit; }
@@ -189,6 +190,9 @@ input[type=range] { width: 100%; accent-color: #1D9E75; height: 6px; cursor: poi
 .summary-row .s-minus { color: #0F6E56; font-weight: 600; }
 .grant-tag { display: inline-block; font-size: 10px; background: #d4f0e6; color: #0F6E56; padding: 1px 6px; border-radius: 6px; margin-right: 4px; }
 .chart-wrap { position: relative; width: 100%; height: 300px; }
+.child-field { display: contents; }
+.mobile-label { display: none; font-size: 11px; font-weight: 600; color: #888; margin-bottom: 3px; }
+
 @media print {
   #page-landing { display:none!important; }
   .calc-header-actions,.btn-add,.btn-remove,.slider-card input[type=range] { display:none!important; }
@@ -252,7 +256,156 @@ input[type=range] { width: 100%; accent-color: #1D9E75; height: 6px; cursor: poi
   .boost-chips { gap:6px; }
   .boost-chip { padding:5px 10px; font-size:11px; }
 }
-@media (max-width: 700px) { .cards-row,.how-steps { grid-template-columns: 1fr; } .landing-title { font-size: 32px; } .children-header,.child-row { grid-template-columns: 38px 1fr 1fr 1fr; } }
+@media (max-width: 700px) {
+  /* ===== כותרת ===== */
+  .calc-header { padding: 10px 14px; flex-wrap: wrap; gap: 6px; }
+  .calc-logo { width: 32px; height: 32px; font-size: 16px; border-radius: 8px; flex-shrink: 0; }
+  .calc-header h1 { font-size: 14px; }
+  .calc-header p { display: none; }
+  .calc-header > div:nth-child(2) { flex: 1; }
+  .calc-header-actions {
+    margin-right: 0;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .calc-header-actions .top-btns {
+    display: flex;
+    gap: 6px;
+  }
+  .btn-back, .btn-print { padding: 7px 12px; font-size: 12px; flex: 1; text-align: center; }
+  .btn-compare { font-size: 12px; padding: 8px 12px; width: 100%; text-align: center; }
+  button[onclick="clearStorage()"] { padding: 7px 12px; font-size: 12px; flex: 1; text-align: center; }
+
+  /* ===== עמוד ראשי ===== */
+  .landing-hero { padding: 30px 16px; }
+  .landing-logo { width: 60px; height: 60px; font-size: 30px; margin-bottom: 16px; }
+  .landing-title { font-size: 28px; }
+  .landing-subtitle { font-size: 15px; margin-bottom: 28px; }
+  .cards-row { grid-template-columns: 1fr; gap: 10px; }
+  .how-steps { grid-template-columns: 1fr; }
+  .masiim-details { grid-template-columns: 1fr 1fr; }
+  .btn-start { padding: 14px 32px; font-size: 16px; }
+
+  /* ===== מחשבון – כללי ===== */
+  .main { padding: 12px; }
+  .card, .slider-card { padding: 14px 14px; margin-bottom: 12px; border-radius: 10px; }
+  .card-title { font-size: 11px; margin-bottom: 12px; }
+
+  /* ===== סליידרים ===== */
+  .slider-top { flex-direction: column; align-items: flex-start; gap: 4px; }
+  .slider-val { font-size: 15px; }
+  .slider-label { font-size: 13px; }
+
+  /* ===== הגדרות בסיס ===== */
+  .grid4, .grid3, .grid2, .grid5 { grid-template-columns: 1fr 1fr; gap: 10px; }
+
+  /* ===== ילדים – כרטיס לכל ילד ===== */
+  .children-header { display: none; }
+  .child-row {
+    display: block !important;
+    padding: 14px;
+    margin-bottom: 14px;
+    border-radius: 12px;
+    border: 1.5px solid #e0e0e0;
+    position: relative;
+    background: #fafafa;
+  }
+  .child-row .btn-remove {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    width: 26px;
+    height: 26px;
+    font-size: 16px;
+  }
+  /* כל שדה מוצג בבלוק עם תווית */
+  .child-field {
+    display: block !important;
+    margin-bottom: 8px;
+  }
+  .mobile-label {
+    display: block;
+    font-size: 11px;
+    font-weight: 600;
+    color: #888;
+    margin-bottom: 3px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  .child-row input {
+    width: 100% !important;
+    padding: 9px 10px;
+    font-size: 15px;
+    border: 1.5px solid #ddd;
+    border-radius: 8px;
+    background: #fff;
+  }
+  /* 2 שדות בשורה לחיסכון מקום */
+  .child-row .child-field:nth-child(2),
+  .child-row .child-field:nth-child(3) { display: inline-block !important; width: calc(60% - 4px); margin-left: 8px; }
+  .child-row .child-field:nth-child(2) { width: 38%; margin-left: 0; }
+  .child-info { font-size: 11px; line-height: 1.7; margin-top: 8px; padding-top: 8px; border-top: 1px solid #eee; }
+  .child-info span { display: block; margin-bottom: 3px; }
+
+  /* ===== הוסף ילד ===== */
+  .btn-add { font-size: 14px; padding: 12px; }
+
+  /* ===== בוסט ===== */
+  .boost-cards { grid-template-columns: 1fr 1fr; gap: 8px; }
+  .boost-card .bc-val { font-size: 14px; }
+
+  /* ===== הלוואות נוספות ===== */
+  .extra-header { display: none; }
+  .extra-row {
+    display: block !important;
+    padding: 12px;
+    margin-bottom: 10px;
+    border-radius: 10px;
+    border: 1.5px solid #e0e0e0;
+    position: relative;
+  }
+  .extra-row input { width: 100%; margin-bottom: 8px; padding: 9px 10px; font-size: 14px; }
+  .extra-row .btn-remove { position: absolute; top: 10px; left: 10px; }
+
+  /* ===== מה נכנס לקופה ===== */
+  .fund-flow { grid-template-columns: 1fr 1fr; gap: 8px; }
+  .flow-item .f-val { font-size: 14px; }
+  .boost-chips { gap: 6px; }
+  .boost-chip { font-size: 11px; padding: 6px 10px; }
+
+  /* ===== מטריקות ===== */
+  .metrics { grid-template-columns: 1fr 1fr; gap: 8px; }
+  .metric .m-val { font-size: 18px; }
+  .metric { padding: 12px 12px; }
+
+  /* ===== טבלת שלבים ===== */
+  .phase-table { font-size: 11px; }
+  .phase-table th, .phase-table td { padding: 6px 6px; }
+  div[style*="overflow-x:auto"] { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+
+  /* ===== סיכום ===== */
+  .summary-row { font-size: 12px; flex-wrap: wrap; gap: 4px; }
+  .summary-row:last-child { font-size: 14px; }
+  .summary-box { padding: 12px; }
+
+  /* ===== גרף ===== */
+  .chart-wrap { height: 220px; }
+
+  /* ===== עמוד השוואה ===== */
+  .landing-content { padding: 0; }
+  #panel-b .children-header,
+  #panel-b div[style*="grid-template-columns:80px"] { display: none !important; }
+  #panel-b .child-row-cmp {
+    display: block !important;
+    padding: 12px;
+    background: #fafafa;
+    border-radius: 10px;
+    border: 1px solid #eee;
+    margin-bottom: 10px;
+  }
+}
 </style>
 </head>
 <body>
@@ -345,7 +498,19 @@ input[type=range] { width: 100%; accent-color: #1D9E75; height: 6px; cursor: poi
     <button class="btn-start" onclick="showCalc()">
       פתח את המחשבון ←
     </button>
-    <div class="btn-start-sub" style="color:#667;margin-top:12px;font-size:12px;">המחשבון פועל לחלוטין בדפדפן שלך · אין שמירת נתונים</div>
+    <div class="btn-start-sub" style="color:#667;margin-top:12px;font-size:12px;">המחשבון פועל לחלוטין בדפדפן שלך · אין שמירת נתונים בשרת</div>
+
+    <div style="margin-top:36px;padding:18px 22px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:12px;max-width:680px;text-align:right;">
+      <p style="font-size:12px;color:#8899bb;line-height:1.8;">
+        <strong style="color:#aab4cc;">⚠️ הבהרה חשובה:</strong>
+        מחשבון זה מיועד לצרכי סימולציה והמחשה בלבד. אין לראות בתוצאות המחשבון המלצה פיננסית, ייעוץ השקעות או הנחייה לביצוע פעולה כלשהי. כל החלטה פיננסית תתקבל על אחריות המשתמש בלבד ובהתייעצות עם גורמים מקצועיים מוסמכים.
+        <br><br>
+        אתר זה אינו קשור לתוכנית משיאים ואינו פועל מטעמה.
+        <br><br>
+        לשאלות והערות:
+        <a href="mailto:oldombey@gmail.com" style="color:#e6b84a;text-decoration:none;">oldombey@gmail.com</a>
+      </p>
+    </div>
 
   </div>
 </div>
@@ -361,11 +526,12 @@ input[type=range] { width: 100%; accent-color: #1D9E75; height: 6px; cursor: poi
     <p>מחשבון תכנון פיננסי לחתונות ילדים</p>
   </div>
   <div class="calc-header-actions">
-    <button class="btn-back" onclick="showLanding()">🏠 חזרה</button>
+    <div class="top-btns">
+      <button class="btn-back" onclick="showLanding()">🏠 חזרה</button>
+      <button class="btn-print" onclick="window.print()">🖨️ הדפסה</button>
+      <button onclick="clearStorage()" style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.2);color:#aab4cc;padding:7px 14px;border-radius:8px;font-size:12px;cursor:pointer;font-family:inherit;" title="מחק נתונים שמורים">🗑️ אפס</button>
+    </div>
     <button class="btn-compare" onclick="showCompare()">📊 השווה מול השקעה בשוק / גמח בלבד</button>
-    <button class="btn-print" onclick="window.print()">🖨️ הדפסה</button>
-    <button onclick="clearStorage()" style="background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.2);color:#aab4cc;padding:7px 14px;border-radius:8px;font-size:12px;cursor:pointer;font-family:inherit;" title="מחק נתונים שמורים">🗑️ אפס</button>
-    
   </div>
 </div>
 
@@ -510,14 +676,14 @@ function addChild(name,loan,year,payments,grant,donM,donP,donT){
   div.className='child-row'; div.id='crow_'+id;
   div.innerHTML=
     '<button class="btn-remove" onclick="delChild(\'crow_'+id+'\')">×</button>'+
-    '<input type="text"   id="cn'+id+'" value="'+name+'"     placeholder="שם" oninput="calc()">'+
-    '<input type="number" id="cl'+id+'" value="'+loan+'"     step="10000" oninput="updC('+id+');calc()">'+
-    '<input type="number" id="cy'+id+'" value="'+year+'"     step="1" min="2024" max="2060" oninput="calc()">'+
-    '<input type="number" id="cp'+id+'" value="'+payments+'" step="10" min="12" max="240" oninput="updC('+id+');calc()">'+
-    '<input type="number" id="cg'+id+'" value="'+grant+'"    step="500" oninput="updC('+id+');calc()">'+
-    '<input type="number" id="cdm'+id+'" value="'+donM+'"    step="50"  min="0" placeholder="0=הושלם" oninput="updC('+id+');calc()">'+
-    '<input type="number" id="cdp'+id+'" value="'+donP+'"    step="500" min="0" placeholder="0" oninput="updC('+id+');calc()">'+
-    '<input type="number" id="cdt'+id+'" value="'+donT+'"    step="500" min="0" placeholder="סה״כ נדרש" oninput="updC('+id+');calc()">'+
+    '<div class="child-field"><label class="mobile-label">שם הילד</label><input type="text" id="cn'+id+'" value="'+name+'" placeholder="שם הילד" oninput="calc()"></div>'+
+    '<div class="child-field"><label class="mobile-label">הלוואה (₪)</label><input type="number" id="cl'+id+'" value="'+loan+'" step="10000" placeholder="הלוואה (₪)" oninput="updC('+id+');calc()"></div>'+
+    '<div class="child-field"><label class="mobile-label">שנת ייעוד</label><input type="number" id="cy'+id+'" value="'+year+'" step="1" min="2024" max="2060" placeholder="שנת ייעוד" oninput="calc()"></div>'+
+    '<div class="child-field"><label class="mobile-label">תשלומי החזר</label><input type="number" id="cp'+id+'" value="'+payments+'" step="10" min="12" max="240" placeholder="תשלומי החזר" oninput="updC('+id+');calc()"></div>'+
+    '<div class="child-field"><label class="mobile-label">מענק כולל (₪)</label><input type="number" id="cg'+id+'" value="'+grant+'" step="500" placeholder="מענק כולל (₪)" oninput="updC('+id+');calc()"></div>'+
+    '<div class="child-field"><label class="mobile-label">תרומה חודשית (₪)</label><input type="number" id="cdm'+id+'" value="'+donM+'" step="50" min="0" placeholder="תרומה חודשית (₪)" oninput="updC('+id+');calc()"></div>'+
+    '<div class="child-field"><label class="mobile-label">שולם עד היום (₪)</label><input type="number" id="cdp'+id+'" value="'+donP+'" step="500" min="0" placeholder="שולם עד היום (₪)" oninput="updC('+id+');calc()"></div>'+
+    '<div class="child-field"><label class="mobile-label">סה״כ תרומה נדרשת (₪)</label><input type="number" id="cdt'+id+'" value="'+donT+'" step="500" min="0" placeholder="סה״כ תרומה נדרשת (₪)" oninput="updC('+id+');calc()"></div>'+
     '<div class="child-info" id="ci'+id+'"></div>';
   document.getElementById('childrenRows').appendChild(div);
   updC(id);
