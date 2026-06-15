@@ -410,7 +410,26 @@ input[type=range] { width: 100%; accent-color: #1D9E75; height: 6px; cursor: poi
   /* ===== גרף ===== */
   .chart-wrap { height: 220px; }
 
-  /* ===== עמוד השוואה ===== */
+  /* ===== טאב קופה לכל ילד – מובייל ===== */
+  #invest-perchild .pc-row > div[style*="grid-template-columns:1fr 1fr 1fr 1fr 1fr"] {
+    grid-template-columns: 1fr 1fr !important;
+  }
+  #invest-perchild .pc-row > div[style*="grid-template-columns:1fr 1fr 1fr;gap:10px"] {
+    grid-template-columns: 1fr 1fr !important;
+  }
+  #invest-perchild .pc-row > div[style*="grid-template-columns:1fr 1fr 1fr;gap:8px"] {
+    grid-template-columns: 1fr 1fr !important;
+  }
+  #invest-perchild .pc-row {
+    overflow: hidden !important;
+  }
+  /* טאב כפתורים */
+  #tab-family, #tab-perchild { font-size: 12px !important; padding: 9px 6px !important; }
+
+  /* קופה משפחתית – 2 עמודות בנייד */
+  #invest-family > div[style*="grid-template-columns:1fr 1fr 1fr 1fr"] {
+    grid-template-columns: 1fr 1fr !important;
+  }
   #page-compare .main { padding: 10px; }
 
   /* בחירת מסלולים */
@@ -1695,7 +1714,7 @@ function clearStorage() {
       <div class="field"><label>סכום פתיחה</label><input type="number" id="cmp-opening" value="0" step="5000" oninput="runCompare()"><div class="unit">₪</div></div>
       <div class="field"><label>הפקדה חודשית</label><input type="number" id="cmp-monthly" value="1200" step="100" oninput="runCompare()"><div class="unit">₪/חודש</div></div>
       <div class="field"><label>תשואה שנתית</label><input type="number" id="cmp-rate" value="7" step="0.5" min="1" max="20" oninput="runCompare()"><div class="unit">%</div></div>
-      <div class="field"><label>שנת סיום הפקדות</label><input type="number" id="cmp-endyear" value="2045" step="1" min="2026" max="2070" oninput="runCompare()"><div class="unit">עד שנה זו מפקידים</div></div>
+      <div class="field"><label>סיום הפקדות</label><input type="number" id="cmp-endyear" value="2045" step="1" min="2026" max="2070" oninput="runCompare()"><div class="unit">עד שנה זו מפקידים</div></div>
     </div>
     <div style="margin-bottom:16px;padding:10px 14px;background:#f7f7f5;border-radius:8px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
       <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;font-weight:500;color:#555;">
