@@ -550,16 +550,36 @@ input[type=range] { width: 100%; accent-color: #1D9E75; height: 6px; cursor: poi
     </button>
     <div class="btn-start-sub" style="color:#667;margin-top:12px;font-size:12px;">המחשבון פועל לחלוטין בדפדפן שלך · אין שמירת נתונים בשרת</div>
 
-    <div style="margin-top:36px;padding:18px 22px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:12px;max-width:680px;text-align:right;">
-      <p style="font-size:12px;color:#8899bb;line-height:1.8;">
+    <div style="margin-top:36px;padding:24px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:12px;max-width:680px;text-align:right;">
+      <p style="font-size:12px;color:#8899bb;line-height:1.8;margin-bottom:16px;">
         <strong style="color:#aab4cc;">⚠️ הבהרה חשובה:</strong>
         מחשבון זה מיועד לצרכי סימולציה והמחשה בלבד. אין לראות בתוצאות המחשבון המלצה פיננסית, ייעוץ השקעות או הנחייה לביצוע פעולה כלשהי. כל החלטה פיננסית תתקבל על אחריות המשתמש בלבד ובהתייעצות עם גורמים מקצועיים מוסמכים.
         <br><br>
         אתר זה אינו קשור לתוכנית משיאים ואינו פועל מטעמה.
-        <br><br>
-        לשאלות והערות:
-        <a href="mailto:oldombey@gmail.com" style="color:#e6b84a;text-decoration:none;">oldombey@gmail.com</a>
       </p>
+
+      <!-- טופס צור קשר -->
+      <div style="border-top:1px solid rgba(255,255,255,0.1);padding-top:16px;">
+        <p style="font-size:13px;font-weight:600;color:#aab4cc;margin-bottom:12px;">📬 שאלות והערות? נשמח לשמוע:</p>
+        <form id="contact-form" action="https://formspree.io/f/meewnapy" method="POST" style="display:flex;flex-direction:column;gap:10px;">
+          <input type="text" name="name" placeholder="שם מלא" required
+            style="padding:10px 14px;border-radius:8px;border:1px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.07);color:#fff;font-size:13px;font-family:inherit;outline:none;direction:rtl;"
+            onfocus="this.style.borderColor='#e6b84a'" onblur="this.style.borderColor='rgba(255,255,255,0.15)'">
+          <input type="email" name="email" placeholder="כתובת מייל" required
+            style="padding:10px 14px;border-radius:8px;border:1px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.07);color:#fff;font-size:13px;font-family:inherit;outline:none;direction:rtl;"
+            onfocus="this.style.borderColor='#e6b84a'" onblur="this.style.borderColor='rgba(255,255,255,0.15)'">
+          <textarea name="message" placeholder="הודעה..." required rows="3"
+            style="padding:10px 14px;border-radius:8px;border:1px solid rgba(255,255,255,0.15);background:rgba(255,255,255,0.07);color:#fff;font-size:13px;font-family:inherit;outline:none;resize:vertical;direction:rtl;"
+            onfocus="this.style.borderColor='#e6b84a'" onblur="this.style.borderColor='rgba(255,255,255,0.15)'"></textarea>
+          <button type="submit"
+            style="background:linear-gradient(135deg,#e6b84a,#f0d080);color:#1a1a2e;border:none;padding:10px 24px;border-radius:8px;font-size:14px;font-weight:700;cursor:pointer;font-family:inherit;align-self:flex-start;">
+            שלח הודעה ←
+          </button>
+          <div id="form-success" style="display:none;color:#4dd9a8;font-size:13px;padding:8px 12px;background:rgba(29,158,117,0.15);border-radius:8px;">
+            ✅ תודה! ההודעה נשלחה בהצלחה.
+          </div>
+        </form>
+      </div>
     </div>
 
   </div>
@@ -991,6 +1011,7 @@ function showCompare() {
   document.getElementById('page-calc').style.display='none';
   document.getElementById('page-compare').style.display='block';
   window.scrollTo({top:0, behavior:'instant'});
+  buildPerChildRows(ch, sYear);
   runCompare();
 }
 
@@ -1063,7 +1084,46 @@ function runCompare() {
     bFinalBal = 0;
   }
 
-  // ===== מסלול ג – השקעה בלבד =====
+  // ===== מסלול ד – קופה לכל ילד =====
+  let dNetTotal=0, dMaxPocket=0, dFinalBal=0, dTotalLoans=0;
+  let dBalByYear=[];
+  const isPerChild = window.investMode === 'perchild';
+  if (activeC && isPerChild) {
+    buildPerChildRows(ch, sYear);
+    const pcCh = getPcChildren();
+    let totalNet=0, totalDeposited=0, totalBoostCost=0, maxMonthly=0, totalShortfall=0;
+    pcCh.forEach(c => {
+      const res = calcPerChildFund(c, sYear);
+      totalNet        += res.netBal;
+      totalDeposited  += res.totalDeposited;
+      totalBoostCost  += res.totalBoostCost;
+      totalShortfall  += res.shortfall;
+      if(res.bMp > maxMonthly) maxMonthly = res.bMp;
+    });
+    dNetTotal   = totalDeposited;
+    dFinalBal   = totalNet;
+    dMaxPocket  = maxMonthly;
+    dTotalLoans = 0;
+    // בנה ציר זמן שנתי מלא – מציג חיסרון כמינוס
+    if(pcCh.length>0){
+      const sorted   = [...pcCh].sort((a,b)=>a.year-b.year);
+      const lastYear = sorted[sorted.length-1].year + 5;
+      const pcBal    = [];
+      let runBal     = 0;
+      let cidx       = 0;
+      for(let y=sYear; y<=lastYear; y++){
+        // בדוק אם יש חתונה בשנה זו
+        while(cidx < sorted.length && sorted[cidx].year === y){
+          const r2 = calcPerChildFund(sorted[cidx], sYear);
+          runBal = Math.max(0, runBal + r2.netBal); // לא נורד מתחת לאפס בגרף
+          cidx++;
+        }
+        pcBal.push({year:y, bal:Math.round(runBal/1000)*1000});
+      }
+      dBalByYear = pcBal;
+    }
+    window.dShortfall = totalShortfall;
+  }
   let cNetTotal=0, cMaxPocket=0, cFinalBal=0, cTotalDeposited=0;
   let cBalByYear=[];
   if (activeC) {
@@ -1122,11 +1182,11 @@ function runCompare() {
           if(cBalance < withdrawGross){
             cWarnings.push('⚠️ אין מספיק כסף בחתונת '+c.name+' ('+c.year+') – חסר '+fmt(withdrawGross-Math.max(0,cBalance))+' ₪'+(cTaxEnabled&&cTaxRate>0?' (כולל מס '+Math.round(cTaxRate*100)+'%)':''));
           }
-          cBalance -= withdrawGross; // מאפשר מינוס!
+          cBalance -= withdrawGross;
         }
       });
 
-      if(m%12===0) cBalByYear.push({year, bal:Math.round(cBalance)});
+      if(m%12===0) cBalByYear.push({year, bal:Math.max(0, Math.round(cBalance))});
     }
 
     cFinalBal = cBalByYear[cBalByYear.length-1]?.bal||0;
@@ -1140,19 +1200,26 @@ function runCompare() {
   // ===== טבלת השוואה =====
   const aData = trackA;
   const cols = [];
-  if(activeA) cols.push({name:'גמח + השקעה', color:'#1D9E75', net:aData.netTotal||0, asset:aData.finalBal||0, peak:aData.maxPocket||0, loans:aData.totalLoans||0, bal:aData.balByYear||[]});
-  if(activeB) cols.push({name:'גמח בלבד', color:'#e6b84a', net:bNetTotal, asset:bFinalBal, peak:bMaxPocket, loans:bTotalLoans, bal:bBalByYear});
-  if(activeC) cols.push({name:'השקעה בלבד', color:'#6366f1', net:cNetTotal, asset:cFinalBal, peak:cMaxPocket, loans:0, bal:cBalByYear});
+  if(activeA) cols.push({name:'גמח + השקעה',      color:'#1D9E75', net:aData.netTotal||0, asset:aData.finalBal||0, peak:aData.maxPocket||0, loans:aData.totalLoans||0, bal:aData.balByYear||[]});
+  if(activeB) cols.push({name:'גמח בלבד',          color:'#e6b84a', net:bNetTotal, asset:bFinalBal, peak:bMaxPocket, loans:bTotalLoans, bal:bBalByYear});
+  if(activeC && !isPerChild) cols.push({name:'השקעה – קופה משפחתית', color:'#6366f1', net:cNetTotal, asset:cFinalBal, peak:cMaxPocket, loans:0, bal:cBalByYear});
+  if(activeC && isPerChild)  cols.push({name:'השקעה – קופה לכל ילד', color:'#8b5cf6', net:dNetTotal, asset:dFinalBal, peak:dMaxPocket, loans:0, bal:[]});
 
   if(!cols.length){document.getElementById('cmp-results').innerHTML='<p style="color:#aaa;text-align:center;padding:20px;">בחר לפחות מסלול אחד להשוואה</p>';return;}
 
   // אזהרות מסלול ג
   let warningsHtml='';
-  if(activeC && window.cWarnings && window.cWarnings.length>0){
+  if(activeC && window.cWarnings && window.cWarnings.length>0 && !isPerChild){
     warningsHtml='<div style="background:#fde0e0;border:1.5px solid #dc2626;border-radius:10px;padding:12px 16px;margin-bottom:16px;">';
     warningsHtml+='<div style="font-size:13px;font-weight:600;color:#dc2626;margin-bottom:6px;">⚠️ בעיות בתרחיש השקעה בלבד:</div>';
     window.cWarnings.forEach(w=>{warningsHtml+='<div style="font-size:13px;color:#b91c1c;margin-bottom:3px;">'+w+'</div>';});
     warningsHtml+='<div style="font-size:12px;color:#888;margin-top:8px;">הגרף מציג יתרה שלילית – משמעותה שאין מספיק כסף בקופה בזמן החתונה.</div>';
+    warningsHtml+='</div>';
+  }
+  if(activeC && isPerChild && window.dShortfall>0){
+    warningsHtml+='<div style="background:#fde0e0;border:1.5px solid #dc2626;border-radius:10px;padding:12px 16px;margin-bottom:16px;">';
+    warningsHtml+='<div style="font-size:13px;font-weight:600;color:#dc2626;margin-bottom:6px;">⚠️ חסר כסף בחלק מהקופות:</div>';
+    warningsHtml+='<div style="font-size:13px;color:#b91c1c;">סה"כ חסר '+fmt(window.dShortfall)+' ₪ כדי לממן את כל החתונות. ראה פירוט בכרטיסי הילדים למעלה.</div>';
     warningsHtml+='</div>';
   }
   let tbl='';
@@ -1212,6 +1279,22 @@ function runCompare() {
 
   document.getElementById('cmp-results').innerHTML = warningsHtml + tbl + chartsHtml;
 
+  // הערה על מסלולים עם חיסרון בגרף
+  const noteEl = document.getElementById('cmp-chart-note');
+  if(noteEl) {
+    const notes = [];
+    if(activeC && !isPerChild && window.cWarnings && window.cWarnings.length>0)
+      notes.push('📊 <strong>השקעה – קופה משפחתית:</strong> אין מספיק כסף בחתונות מסוימות – הגרף מציג 0 במקום מינוס.');
+    if(activeC && isPerChild && window.dShortfall>0)
+      notes.push('📊 <strong>השקעה – קופה לכל ילד:</strong> חסרים '+fmt(window.dShortfall)+' ₪ כדי לממן את כל החתונות – הגרף מציג 0 במקום מינוס.');
+    if(notes.length>0){
+      noteEl.innerHTML = '⚠️ שים לב: ' + notes.join('<br>');
+      noteEl.style.display = 'block';
+    } else {
+      noteEl.style.display = 'none';
+    }
+  }
+
   // גרף 1 – יתרה
   setTimeout(()=>{
     if(cCharts.c1){cCharts.c1.destroy();}
@@ -1225,7 +1308,7 @@ function runCompare() {
       data:allYears.map(y=>{const b=c.bal.find(b=>b.year===y);return b?Math.round(b.bal/1000):null;}),
       tension:0.35, pointRadius:2, borderWidth:2.5, spanGaps:true
     }));
-    cCharts.c1=new Chart(document.getElementById('cmpChart1'),{type:'line',data:{labels:allYears,datasets:datasets1},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{size:11},boxWidth:12}}},scales:{x:{ticks:{color:'#999',autoSkip:true,maxTicksLimit:10},grid:{color:'rgba(0,0,0,0.04)'}},y:{ticks:{color:'#999',callback:v=>v+'K'},grid:{color:'rgba(0,0,0,0.04)'},afterDataLimits(scale){if(scale.min>0)scale.min=0;}}}}});
+    cCharts.c1=new Chart(document.getElementById('cmpChart1'),{type:'line',data:{labels:allYears,datasets:datasets1},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{size:11},boxWidth:12}}},scales:{x:{ticks:{color:'#999',autoSkip:true,maxTicksLimit:10},grid:{color:'rgba(0,0,0,0.04)'}},y:{ticks:{color:'#999',callback:v=>v+'K'},grid:{color:'rgba(0,0,0,0.04)'}}}}});
 
     // גרף 2 – סה"כ תשלומים
     cCharts.c2=new Chart(document.getElementById('cmpChart2'),{type:'bar',data:{
@@ -1265,6 +1348,192 @@ function updateFundDrawNote() {
       el.style.background = '#fff8ec';
     }
   }
+}
+
+function switchInvestTab(tab) {
+  const isFamily = tab === 'family';
+  document.getElementById('invest-family').style.display  = isFamily ? 'block' : 'none';
+  document.getElementById('invest-perchild').style.display = isFamily ? 'none' : 'block';
+  document.getElementById('tab-family').style.background   = isFamily ? '#6366f1' : '#f0f0ff';
+  document.getElementById('tab-family').style.color        = isFamily ? '#fff' : '#4f46e5';
+  document.getElementById('tab-perchild').style.background = isFamily ? '#f0f0ff' : '#6366f1';
+  document.getElementById('tab-perchild').style.color      = isFamily ? '#4f46e5' : '#fff';
+  window.investMode = tab;
+  runCompare();
+}
+window.investMode = 'family';
+
+let pcChildCount = 0;
+
+function buildPerChildRows(ch, sYear) {
+  const container = document.getElementById('pc-child-rows');
+  if (!container) return;
+  // רק אם ריק – בנה אוטומטית מהילדים הקיימים
+  if (container.querySelectorAll('.pc-row').length === 0 && ch.length > 0) {
+    pcChildCount = 0; // אפס מונה
+    ch.forEach(c => addPcChild(c.name, c.year, sYear, c.loan));
+  }
+}
+
+function addPcChild(name, weddingYear, sYear, loanAmt) {
+  const container = document.getElementById('pc-child-rows');
+  if (!container) return;
+  const id = 'pc'+(pcChildCount++);
+  sYear = sYear || +(document.getElementById('startYear')||{}).value||2026;
+  weddingYear = weddingYear || sYear+20;
+  loanAmt = loanAmt || 200000;
+  name = name || ('ילד '+pcChildCount);
+  const yearsToWedding = weddingYear - sYear;
+  // ברירת מחדל: הפקד מגיל לידה (הנחה גיל לידה = 20 שנה לפני חתונה)
+  const defaultYrs = Math.min(yearsToWedding + 20, yearsToWedding); // כל השנים האפשריות
+
+  const div = document.createElement('div');
+  div.className = 'pc-row';
+  div.id = 'pcrow_'+id;
+  div.style.cssText = 'background:#fafafa;border-radius:10px;padding:14px;border:1.5px solid #e0e0ff;margin-bottom:10px;position:relative;';
+  div.innerHTML = `
+    <button onclick="document.getElementById('pcrow_${id}').remove();runCompare();"
+      style="position:absolute;top:10px;left:10px;background:#fee2e2;border:none;color:#dc2626;width:26px;height:26px;border-radius:6px;cursor:pointer;font-size:16px;line-height:1;">×</button>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr 1fr;gap:10px;margin-bottom:10px;">
+      <div class="field"><label>שם</label>
+        <input type="text" id="${id}_name" value="${name}" placeholder="שם" oninput="runCompare()"
+          style="width:100%;padding:7px 9px;border:1px solid #ddd;border-radius:8px;font-size:13px;font-family:inherit;"></div>
+      <div class="field"><label>שנת חתונה</label>
+        <input type="number" id="${id}_year" value="${weddingYear}" step="1" min="${sYear}" max="2080" oninput="updatePcHeader('${id}');runCompare()"
+          style="width:100%;padding:7px 9px;border:1px solid #ddd;border-radius:8px;font-size:13px;font-family:inherit;"></div>
+      <div class="field"><label>יעד למשיכה (₪)</label>
+        <input type="number" id="${id}_loan" value="${loanAmt}" step="10000" oninput="runCompare()"
+          style="width:100%;padding:7px 9px;border:1px solid #ddd;border-radius:8px;font-size:13px;font-family:inherit;"></div>
+      <div class="field"><label>פתיחה (₪)</label>
+        <input type="number" id="${id}_open" value="20000" step="5000" oninput="runCompare()"
+          style="width:100%;padding:7px 9px;border:1px solid #ddd;border-radius:8px;font-size:13px;font-family:inherit;"></div>
+      <div class="field"><label>הפקדה חודשית</label>
+        <input type="number" id="${id}_mon" value="200" step="50" oninput="runCompare()"
+          style="width:100%;padding:7px 9px;border:1px solid #ddd;border-radius:8px;font-size:13px;font-family:inherit;"></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;margin-bottom:8px;">
+      <div class="field">
+        <label>שנות הפקדה</label>
+        <input type="number" id="${id}_yrs" value="${yearsToWedding}" step="1" min="1" max="60" oninput="runCompare()"
+          style="width:100%;padding:7px 9px;border:1px solid #ddd;border-radius:8px;font-size:13px;font-family:inherit;">
+        <div style="font-size:10px;color:#aaa;margin-top:2px;">ניתן להזין יותר מהשנים עד החתונה (למשל מגיל לידה)</div>
+      </div>
+      <div class="field"><label>תשואה שנתית %</label>
+        <input type="number" id="${id}_rate" value="8" step="0.5" min="1" max="30" oninput="runCompare()"
+          style="width:100%;padding:7px 9px;border:1px solid #ddd;border-radius:8px;font-size:13px;font-family:inherit;"></div>
+      <div style="padding-top:20px;">
+        <div id="${id}_years_note" style="font-size:11px;color:#6366f1;padding:6px 10px;background:#f0f0ff;border-radius:6px;">
+          ${yearsToWedding} שנים עד החתונה
+        </div>
+      </div>
+    </div>
+    <details style="margin-top:4px;">
+      <summary style="cursor:pointer;font-size:12px;color:#BA7517;padding:6px 10px;background:#fff8ec;border-radius:6px;border:1px solid #f0d090;">💡 הלוואת מינוף (אופציונלי)</summary>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-top:8px;padding:8px;background:#fafafa;border-radius:6px;">
+        <div class="field"><label>סכום</label><input type="number" id="${id}_bamt" value="0" step="5000" oninput="runCompare()" style="width:100%;padding:6px 8px;border:1px solid #ddd;border-radius:7px;font-size:12px;font-family:inherit;"></div>
+        <div class="field"><label>ריבית %</label><input type="number" id="${id}_brate" value="5.5" step="0.25" oninput="runCompare()" style="width:100%;padding:6px 8px;border:1px solid #ddd;border-radius:7px;font-size:12px;font-family:inherit;"></div>
+        <div class="field"><label>תשלומים</label><input type="number" id="${id}_bpmts" value="60" step="6" oninput="runCompare()" style="width:100%;padding:6px 8px;border:1px solid #ddd;border-radius:7px;font-size:12px;font-family:inherit;"></div>
+      </div>
+    </details>
+    <div id="${id}_result" style="margin-top:10px;padding:8px 12px;background:#f0f0ff;border-radius:8px;font-size:12px;color:#4f46e5;line-height:1.7;"></div>
+  `;
+  container.appendChild(div);
+}
+
+function updatePcHeader(id) {
+  const sYear = +(document.getElementById('startYear')||{}).value||2026;
+  const wYear = +(document.getElementById(id+'_year')||{}).value||sYear+20;
+  const yrs   = wYear - sYear;
+  const note  = document.getElementById(id+'_years_note');
+  if(note) note.textContent = yrs + ' שנים עד החתונה';
+}
+
+function getPcChildren() {
+  return Array.from(document.querySelectorAll('.pc-row')).map(row => {
+    const id = row.id.replace('pcrow_','');
+    return {
+      id,
+      name:  (document.getElementById(id+'_name')||{}).value||'ילד',
+      year:  +(document.getElementById(id+'_year')||{}).value||2035,
+      loan:  +(document.getElementById(id+'_loan')||{}).value||200000,
+      open:  +(document.getElementById(id+'_open')||{}).value||20000,
+      mon:   +(document.getElementById(id+'_mon')||{}).value||200,
+      yrs:   +(document.getElementById(id+'_yrs')||{}).value||20,
+      rate:  +(document.getElementById(id+'_rate')||{}).value||8,
+      bamt:  +(document.getElementById(id+'_bamt')||{}).value||0,
+      brate: +(document.getElementById(id+'_brate')||{}).value||5.5,
+      bpmts: +(document.getElementById(id+'_bpmts')||{}).value||60,
+    };
+  });
+}
+
+function calcPerChildFund(c, sYear) {
+  // כל הנתונים מגיעים מ-getPcChildren() שקורא מה-DOM בזמן אמת
+  const open  = c.open  || 20000;
+  const mon   = c.mon   || 200;
+  const yrs   = c.yrs   || 20;
+  const rateY = c.rate  || 8;
+  const bamt  = c.bamt  || 0;
+  const brate = c.brate || 5.5;
+  const bpmts = c.bpmts || 60;
+  const loan  = c.loan  || 200000;
+  const rate  = rateY/100/12;
+  const resultId = c.id+'_result';
+  const pcTax = (document.getElementById('pcTaxEnabled')?.checked!==false)
+    ? (+(document.getElementById('pc-tax-rate')||{}).value||16)/100 : 0;
+
+  const totalMonths    = (c.year - sYear) * 12;
+  const depMonths      = Math.min(yrs * 12, Math.max(totalMonths, yrs * 12)); // מאפשר הפקדות היסטוריות
+  const bMp            = bamt>0 ? shapzer(bamt, brate, bpmts) : 0;
+  const totalBoostCost = bMp * bpmts;
+  const totalDeposited = open + mon*depMonths + totalBoostCost;
+
+  // סימולציה: אם יש הפקדות היסטוריות (yrs > yearsToWedding)
+  // מחשב קודם את ההפקדות הנוספות ואז את הצמיחה עד החתונה
+  const histMonths = Math.max(0, yrs*12 - totalMonths); // חודשים לפני sYear
+  let balance = open + bamt;
+  // הפקדות היסטוריות (לפני sYear) – מחשב צמיחה רטרואקטיבית
+  for(let m=1; m<=histMonths; m++) {
+    balance *= (1+rate);
+    balance += mon;
+  }
+  // הפקדות מ-sYear עד החתונה
+  const futureDepMonths = Math.min(yrs*12, totalMonths);
+  for(let m=1; m<=totalMonths; m++) {
+    balance *= (1+rate);
+    if(m<=futureDepMonths) balance += mon;
+  }
+
+  const neededGross = pcTax>0 ? loan / (1-pcTax) : loan;
+  const canWithdraw = Math.min(balance, neededGross);
+  const actualNet   = pcTax>0 ? canWithdraw*(1-pcTax) : canWithdraw;
+  const taxAmt      = canWithdraw - actualNet;
+  const balAfter    = balance - canWithdraw;
+  const shortfall   = Math.max(0, neededGross - balance);
+
+  const res = document.getElementById(resultId);
+  if(res) {
+    const taxLine = pcTax>0
+      ? `<div>🏛️ מס רווחי הון: <strong>${fmt(taxAmt)} ₪</strong> · ברוטו: ${fmt(canWithdraw)} ₪ → נטו: <strong style="color:#6366f1;">${fmt(actualNet)} ₪</strong></div>`
+      : `<div>✅ ללא מס · נטו = ברוטו: <strong style="color:#6366f1;">${fmt(actualNet)} ₪</strong></div>`;
+
+    const shortfallLine = shortfall > 0
+      ? `<div style="color:#dc2626;font-weight:600;">⚠️ חסר ${fmt(shortfall)} ₪ ברוטו (${fmt(Math.round(shortfall*(1-pcTax)))} ₪ נטו) כדי לממן את יעד המשיכה המלא</div>`
+      : `<div style="color:#0F6E56;">✅ הקופה מספיקה לכסות את יעד המשיכה במלואו</div>`;
+
+    res.innerHTML =
+      `<div style="display:grid;grid-template-columns:1fr 1fr;gap:4px;">` +
+      `<div>📈 יתרה ביום החתונה (${c.year}): <strong>${fmt(balance)} ₪</strong></div>`+
+      `<div>🎯 יעד משיכה: <strong>${fmt(loan)} ₪</strong></div>`+
+      `</div>`+
+      `<div style="border-top:1px solid #d0d0f0;margin:6px 0;"></div>`+
+      taxLine +
+      shortfallLine +
+      (bamt>0 ? `<div>💳 מינוף: ${fmt(bMp)} ₪/חודש · סה"כ פרעון ${fmt(totalBoostCost)} ₪</div>` : '')+
+      `<div>💼 נשאר בקופה אחרי החתונה: <strong>${fmt(balAfter)} ₪</strong></div>`+
+      `<div style="color:#888;font-size:11px;">סה"כ הפקדות + פרעון מינוף: ${fmt(totalDeposited)} ₪</div>`;
+  }
+  return { balance, netBal:balAfter, totalDeposited, totalBoostCost, bMp, taxAmt, shortfall, actualNet };
 }
 
 function toggleTax() {
@@ -1417,43 +1686,65 @@ function clearStorage() {
 <!-- מסלול ג – השקעה בלבד -->
 <div class="card" id="panel-c">
   <p class="card-title">📈 השקעה בלבד – נתונים</p>
-  <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:14px;margin-bottom:16px;">
-    <div class="field"><label>סכום פתיחה</label><input type="number" id="cmp-opening" value="0" step="5000" oninput="runCompare()"><div class="unit">₪</div></div>
-    <div class="field"><label>הפקדה חודשית</label><input type="number" id="cmp-monthly" value="1200" step="100" oninput="runCompare()"><div class="unit">₪/חודש</div></div>
-    <div class="field"><label>תשואה שנתית</label><input type="number" id="cmp-rate" value="7" step="0.5" min="1" max="20" oninput="runCompare()"><div class="unit">%</div></div>
-    <div class="field"><label>שנת סיום הפקדות</label><input type="number" id="cmp-endyear" value="2045" step="1" min="2026" max="2070" oninput="runCompare()"><div class="unit">עד שנה זו מפקידים</div></div>
+  <div style="display:flex;gap:0;margin-bottom:18px;border-radius:10px;overflow:hidden;border:1.5px solid #6366f1;">
+    <button id="tab-family" onclick="switchInvestTab('family')" style="flex:1;padding:10px;font-size:13px;font-weight:600;font-family:inherit;cursor:pointer;border:none;background:#6366f1;color:#fff;">🏦 קופה משפחתית</button>
+    <button id="tab-perchild" onclick="switchInvestTab('perchild')" style="flex:1;padding:10px;font-size:13px;font-weight:600;font-family:inherit;cursor:pointer;border:none;background:#f0f0ff;color:#4f46e5;">👶 קופה לכל ילד</button>
   </div>
-  <div style="margin-bottom:16px;padding:10px 14px;background:#f7f7f5;border-radius:8px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
-    <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;font-weight:500;color:#555;">
-      <input type="checkbox" id="cmpTaxEnabled" checked onchange="runCompare()" style="accent-color:#1D9E75;width:16px;height:16px;">
-      <span>כולל מס רווחי הון</span>
-    </label>
-    <div class="field" style="margin:0;display:flex;align-items:center;gap:8px;">
-      <input type="number" id="cmp-tax-rate" value="16" step="1" min="0" max="30" oninput="runCompare()" style="width:70px;padding:6px 8px;font-size:13px;">
-      <span style="font-size:12px;color:#888;">% · כבה אם עצמאי עם קרן השתלמות פטורה או הפסדי הון לקיזוז</span>
+  <div id="invest-family">
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:14px;margin-bottom:16px;">
+      <div class="field"><label>סכום פתיחה</label><input type="number" id="cmp-opening" value="0" step="5000" oninput="runCompare()"><div class="unit">₪</div></div>
+      <div class="field"><label>הפקדה חודשית</label><input type="number" id="cmp-monthly" value="1200" step="100" oninput="runCompare()"><div class="unit">₪/חודש</div></div>
+      <div class="field"><label>תשואה שנתית</label><input type="number" id="cmp-rate" value="7" step="0.5" min="1" max="20" oninput="runCompare()"><div class="unit">%</div></div>
+      <div class="field"><label>שנת סיום הפקדות</label><input type="number" id="cmp-endyear" value="2045" step="1" min="2026" max="2070" oninput="runCompare()"><div class="unit">עד שנה זו מפקידים</div></div>
     </div>
-  </div>
-  <details style="margin-bottom:16px;">
-    <summary style="cursor:pointer;font-size:13px;font-weight:500;color:#BA7517;padding:8px 12px;background:#fff8ec;border-radius:8px;border:1px solid #f0d090;">💡 הלוואת מינוף לקופה (אופציונלי)</summary>
-    <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:12px;margin-top:10px;padding:12px;background:#fafafa;border-radius:8px;">
-      <div class="field"><label>סכום הלוואה</label><input type="number" id="cmp-boost-amt" value="0" step="5000" oninput="runCompare()"><div class="unit">₪ (0 = ללא)</div></div>
-      <div class="field"><label>ריבית שנתית</label><input type="number" id="cmp-boost-rate" value="5.5" step="0.25" oninput="runCompare()"><div class="unit">%</div></div>
-      <div class="field"><label>מספר תשלומים</label><input type="number" id="cmp-boost-pmts" value="86" step="6" oninput="runCompare()"><div class="unit">חודשים</div></div>
-      <div class="field"><label>פרעון חודשי</label><input type="text" id="cmp-boost-display" readonly><div class="unit">₪/חודש · שפיצר</div></div>
+    <div style="margin-bottom:16px;padding:10px 14px;background:#f7f7f5;border-radius:8px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+      <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;font-weight:500;color:#555;">
+        <input type="checkbox" id="cmpTaxEnabled" checked onchange="runCompare()" style="accent-color:#1D9E75;width:16px;height:16px;">
+        <span>כולל מס רווחי הון</span>
+      </label>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <input type="number" id="cmp-tax-rate" value="16" step="1" min="0" max="30" oninput="runCompare()" style="width:70px;padding:6px 8px;font-size:13px;border:1.5px solid #e0e0e0;border-radius:8px;font-family:inherit;">
+        <span style="font-size:12px;color:#888;">% · כבה אם עצמאי עם קרן השתלמות פטורה</span>
+      </div>
     </div>
-  </details>
-  <p style="font-size:12px;color:#888;margin-bottom:8px;" id="cmp-invest-note">משיכה נטו בכל חתונה (הקופה תמשוך יותר בגלל מס):</p>
-  <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:6px;padding:0 12px;">
-    <span style="font-size:11px;font-weight:600;color:#888;">ילד / שנה</span>
-    <span style="font-size:11px;font-weight:600;color:#888;">סכום משיכה (₪)</span>
+    <details style="margin-bottom:16px;">
+      <summary style="cursor:pointer;font-size:13px;font-weight:500;color:#BA7517;padding:8px 12px;background:#fff8ec;border-radius:8px;border:1px solid #f0d090;">💡 הלוואת מינוף לקופה (אופציונלי)</summary>
+      <div style="display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:12px;margin-top:10px;padding:12px;background:#fafafa;border-radius:8px;">
+        <div class="field"><label>סכום הלוואה</label><input type="number" id="cmp-boost-amt" value="0" step="5000" oninput="runCompare()"><div class="unit">₪ (0 = ללא)</div></div>
+        <div class="field"><label>ריבית שנתית</label><input type="number" id="cmp-boost-rate" value="5.5" step="0.25" oninput="runCompare()"><div class="unit">%</div></div>
+        <div class="field"><label>מספר תשלומים</label><input type="number" id="cmp-boost-pmts" value="86" step="6" oninput="runCompare()"><div class="unit">חודשים</div></div>
+        <div class="field"><label>פרעון חודשי</label><input type="text" id="cmp-boost-display" readonly><div class="unit">₪/חודש · שפיצר</div></div>
+      </div>
+    </details>
+    <p style="font-size:12px;color:#888;margin-bottom:8px;" id="cmp-invest-note">משיכה נטו בכל חתונה:</p>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:6px;padding:0 12px;">
+      <span style="font-size:11px;font-weight:600;color:#888;">ילד / שנה</span>
+      <span style="font-size:11px;font-weight:600;color:#888;">סכום משיכה (₪)</span>
+    </div>
+    <div id="cmp-invest-rows"></div>
   </div>
-  <div id="cmp-invest-rows"></div>
+  <div id="invest-perchild" style="display:none;">
+    <p style="font-size:13px;color:#888;margin-bottom:14px;">לכל ילד קופה עצמאית – מגיל לידה עד החתונה.</p>
+    <div style="margin-bottom:12px;padding:10px 14px;background:#f7f7f5;border-radius:8px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+      <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;font-weight:500;color:#555;">
+        <input type="checkbox" id="pcTaxEnabled" checked onchange="runCompare()" style="accent-color:#6366f1;width:16px;height:16px;">
+        <span>כולל מס רווחי הון</span>
+      </label>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <input type="number" id="pc-tax-rate" value="16" step="1" min="0" max="30" oninput="runCompare()" style="width:70px;padding:6px 8px;font-size:13px;border:1.5px solid #e0e0e0;border-radius:8px;font-family:inherit;">
+        <span style="font-size:12px;color:#888;">%</span>
+      </div>
+    </div>
+    <div id="pc-child-rows"></div>
+    <button class="btn-add" onclick="addPcChild();runCompare()" style="margin-top:6px;background:#f0f0ff;border-color:#6366f1;color:#4f46e5;">+ הוסף ילד לקופה נפרדת</button>
+  </div>
 </div>
 
 <!-- תוצאות -->
 <div class="card">
   <p class="card-title">תוצאות ההשוואה</p>
   <div id="cmp-results"><p style="color:#aaa;text-align:center;padding:20px;">טוען...</p></div>
+  <div id="cmp-chart-note" style="display:none;margin-top:10px;padding:10px 14px;background:#fff8ec;border:1px solid #f0d090;border-radius:8px;font-size:12px;color:#BA7517;line-height:1.7;"></div>
 </div>
 
 </div>
@@ -1472,6 +1763,35 @@ document.addEventListener('blur', function(e){
     e.target.dispatchEvent(new Event('input'));
   }
 }, true);
+
+// טופס צור קשר
+const contactForm = document.getElementById('contact-form');
+if (contactForm) {
+  contactForm.addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const btn = contactForm.querySelector('button[type=submit]');
+    btn.textContent = 'שולח...';
+    btn.disabled = true;
+    try {
+      const res = await fetch(contactForm.action, {
+        method: 'POST',
+        body: new FormData(contactForm),
+        headers: { 'Accept': 'application/json' }
+      });
+      if (res.ok) {
+        contactForm.reset();
+        document.getElementById('form-success').style.display = 'block';
+        btn.style.display = 'none';
+      } else {
+        btn.textContent = 'שגיאה – נסה שוב';
+        btn.disabled = false;
+      }
+    } catch {
+      btn.textContent = 'שגיאה – נסה שוב';
+      btn.disabled = false;
+    }
+  });
+}
 
 // רישום Service Worker לـ PWA
 if ('serviceWorker' in navigator) {
