@@ -159,9 +159,9 @@ input[type=range] { width: 100%; accent-color: #1D9E75; height: 6px; cursor: poi
 .btn-remove:hover { background: #fca5a5; }
 .btn-add { background: #f0faf6; border: 1.5px dashed #1D9E75; color: #1D9E75; padding: 10px 20px; border-radius: 10px; cursor: pointer; font-size: 14px; font-weight: 500; font-family: inherit; width: 100%; margin-top: 6px; transition: background 0.2s; }
 .btn-add:hover { background: #e0f5ee; }
-.extra-header { display: grid; grid-template-columns: 38px 1fr 1fr 1fr 1fr 1fr; gap: 8px; margin-bottom: 6px; }
+.extra-header { display: grid; grid-template-columns: 38px 2fr 1fr 1fr 1fr 1fr; gap: 8px; margin-bottom: 6px; }
 .extra-header span { font-size: 11px; font-weight: 600; color: #888; }
-.extra-row { display: grid; grid-template-columns: 38px 1fr 1fr 1fr 1fr 1fr; gap: 8px; align-items: center; margin-bottom: 8px; background: #fafafa; border-radius: 10px; padding: 10px 12px; border: 1px solid #eee; }
+.extra-row { display: grid; grid-template-columns: 38px 2fr 1fr 1fr 1fr 1fr; gap: 8px; align-items: center; margin-bottom: 8px; background: #fafafa; border-radius: 10px; padding: 10px 12px; border: 1px solid #eee; }
 .extra-row input { padding: 7px 9px; border: 1px solid #e0e0e0; border-radius: 8px; font-size: 13px; background: #fff; outline: none; width: 100%; font-family: inherit; }
 .extra-row input:focus { border-color: #1D9E75; }
 .extra-row input[readonly] { background: #f0faf6; color: #0F6E56; font-weight: 600; border-color: #b0ddd0; cursor: default; }
@@ -253,7 +253,20 @@ input[type=range] { width: 100%; accent-color: #1D9E75; height: 6px; cursor: poi
   .phase-table th, .phase-table td { padding:5px 7px; font-size:11px; }
 
   /* גרף */
-  .chart-wrap { height:180px; }
+  .chart-wrap { 
+    height: 200px !important; 
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow: hidden !important;
+    page-break-inside: avoid;
+  }
+  .chart-wrap canvas {
+    max-width: 100% !important;
+  }
+  .card:has(.chart-wrap) {
+    overflow: hidden !important;
+    padding-left: 8px !important;
+  }
 
   /* סיכום */
   .summary-row { font-size:12px; padding:4px 0; }
@@ -1773,7 +1786,21 @@ function clearStorage() {
 </div>
 
 <script>
-// נקה 0 אוטומטי כשמקליקים על שדה מספר
+// טיפול בהדפסה – וודא שהגרף מתאים לעמוד
+window.addEventListener('beforeprint', function() {
+  if(chartInstance) {
+    chartInstance.options.plugins.legend = {display: false};
+    chartInstance.options.scales.y.ticks.maxTicksLimit = 5;
+    chartInstance.resize(600, 200);
+    chartInstance.update();
+  }
+});
+window.addEventListener('afterprint', function() {
+  if(chartInstance) {
+    chartInstance.resize();
+    chartInstance.update();
+  }
+});
 document.addEventListener('focus', function(e){
   if(e.target.type==='number' && (e.target.value==='0' || +e.target.value===0)){
     e.target.value='';
