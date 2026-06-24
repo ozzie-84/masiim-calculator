@@ -254,19 +254,18 @@ input[type=range] { width: 100%; accent-color: #1D9E75; height: 6px; cursor: poi
 
   /* גרף */
   .chart-wrap { 
-    height: 200px !important; 
-    width: 100% !important;
+    height: 180px !important; 
+    width: calc(100% - 20px) !important;
     max-width: 100% !important;
     overflow: hidden !important;
     page-break-inside: avoid;
+    margin-left: 10px !important;
   }
   .chart-wrap canvas {
     max-width: 100% !important;
+    width: 100% !important;
   }
-  .card:has(.chart-wrap) {
-    overflow: hidden !important;
-    padding-left: 8px !important;
-  }
+  .card { overflow: hidden !important; }
 
   /* סיכום */
   .summary-row { font-size:12px; padding:4px 0; }
@@ -1789,14 +1788,22 @@ function clearStorage() {
 // טיפול בהדפסה – וודא שהגרף מתאים לעמוד
 window.addEventListener('beforeprint', function() {
   if(chartInstance) {
-    chartInstance.options.plugins.legend = {display: false};
+    chartInstance.options.scales.x.ticks.maxTicksLimit = 8;
     chartInstance.options.scales.y.ticks.maxTicksLimit = 5;
-    chartInstance.resize(600, 200);
-    chartInstance.update();
+    chartInstance.options.scales.y.ticks.color = '#333';
+    chartInstance.options.scales.x.ticks.color = '#333';
+    chartInstance.options.layout = { padding: { left: 10, right: 10 } };
+    chartInstance.update('none');
+    chartInstance.resize(520, 180);
   }
 });
 window.addEventListener('afterprint', function() {
   if(chartInstance) {
+    chartInstance.options.scales.x.ticks.maxTicksLimit = 14;
+    chartInstance.options.scales.y.ticks.maxTicksLimit = undefined;
+    chartInstance.options.scales.y.ticks.color = '#999';
+    chartInstance.options.scales.x.ticks.color = '#999';
+    chartInstance.options.layout = {};
     chartInstance.resize();
     chartInstance.update();
   }
