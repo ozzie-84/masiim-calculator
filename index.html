@@ -252,9 +252,12 @@ input[type=range] { width: 100%; accent-color: #1D9E75; height: 6px; cursor: poi
   /* טבלה */
   .phase-table th, .phase-table td { padding:5px 7px; font-size:11px; }
 
+  /* הסתר כותרת צמודה בהדפסה */
+  .calc-header { display: none !important; }
+
   /* גרף */
   .chart-wrap { 
-    height: 180px !important; 
+    height: 260px !important; 
     width: calc(100% - 20px) !important;
     max-width: 100% !important;
     overflow: hidden !important;
@@ -1794,7 +1797,7 @@ window.addEventListener('beforeprint', function() {
     chartInstance.options.scales.x.ticks.color = '#333';
     chartInstance.options.layout = { padding: { left: 10, right: 10 } };
     chartInstance.update('none');
-    chartInstance.resize(520, 180);
+    chartInstance.resize(520, 260);
   }
 });
 window.addEventListener('afterprint', function() {
